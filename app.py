@@ -15,8 +15,12 @@ def transcribe():
     try:
         transcript = openai.Audio.transcribe("whisper-1", file)
         return jsonify({'text': transcript['text']})
+    except openai.error.OpenAIError as e:
+        print("OpenAI error:", e)
+        return jsonify({'error': f'OpenAI API Error: {str(e)}'}), 500
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print("Unexpected error:", e)
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run()
