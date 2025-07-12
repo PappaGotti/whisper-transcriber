@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
-import openai
 import os
+import openai
+
+# NEW OpenAI client format for SDK v1.95.1
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
@@ -11,7 +13,7 @@ def transcribe():
         return jsonify({'error': 'No file uploaded'}), 400
 
     file = request.files['file']
-    print(f"📥 Received file: {file.filename}, Type: {file.content_type}")
+    print(f"📥 Received file: {file.filename}")
 
     try:
         response = client.audio.transcriptions.create(
@@ -26,4 +28,4 @@ def transcribe():
 
 @app.route('/')
 def health():
-    return "Whisper backend is running ✅", 200
+    return "Whisper backend running ✅", 200
