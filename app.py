@@ -35,5 +35,8 @@ def transcribe():
         print("✅ Transcription complete")
         return jsonify({'text': response.text})
     except Exception as e:
-        print("❌ Transcription failed:", str(e))
-        return jsonify({'error': str(e)}), 500
+    import traceback
+    print("❌ Exception Traceback:")
+    traceback.print_exc()
+    return jsonify({'error': str(e)}), 500
+
