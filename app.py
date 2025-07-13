@@ -1,40 +1,38 @@
-from flask import Flask, request, jsonify
-from openai import OpenAI
 import os
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import openai
 import traceback
 
 app = Flask(__name__)
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+CORS(app)
 
-@app.route('/transcribe', methods=['POST'])
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+@app.route("/transcribe", methods=["POST"])
 def transcribe():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
-
-    file = request.files['file']
-    print(f"📥 Received file: {file.filename}, Content-Type: {file.content_type}")
-
     try:
-        # Save file temporarily
-        temp_path = "/tmp/uploaded_audio"
-        file.save(temp_path)
-        print("📦 File saved to /tmp")
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
 
-        # Open the saved file for OpenAI
-        with open(temp_path, "rb") as f:
-            transcription = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=f
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "Empty filename"}), 400
+
+        # Save temporarily
+        temp_path = "/tmp/temp_audio"
+        file.save(temp_path)
+
+        # Reopen for OpenAI
+        with open(temp_path, "rb") as audio_file:
+            transcription = openai.audio.transcriptions.create(
+                file=audio_file,
+                model="whisper-1"
+                # ❌ Don't pass batch_size here!
             )
 
-        print("✅ Transcription complete")
-        return jsonify({'text': transcription.text})
+        return jsonify({"text": transcription.text})
 
     except Exception as e:
-        print("❌ Transcription error:")
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/')
-def home():
-    return "Whisper backend is live ✅", 200
+        print("❌ Transcription error:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
