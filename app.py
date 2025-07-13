@@ -12,17 +12,16 @@ def transcribe():
         return jsonify({'error': 'No file uploaded'}), 400
 
     file = request.files['file']
-    print(f"📥 Received file: {file.filename}, content-type: {file.content_type}")
+    print(f"📥 Received file: {file.filename}, Content-Type: {file.content_type}")
 
     try:
-        # Save the file to temp to confirm it arrived
-        print("📦 Saving file for debug...")
+        # Save the file for debug
         with open("/tmp/test.mp3", "wb") as f:
             f.write(file.read())
 
-        file.stream.seek(0)  # reset stream after saving
+        file.stream.seek(0)  # reset the stream pointer
 
-        # Transcribe using OpenAI Whisper API
+        # Transcribe using OpenAI Whisper API (v1.95+ style)
         response = client.audio.transcriptions.create(
             model="whisper-1",
             file=file.stream
@@ -30,12 +29,11 @@ def transcribe():
 
         print("✅ Transcription complete")
         return jsonify({'text': response.text})
-
     except Exception as e:
-        print("❌ Exception Traceback:")
+        print("❌ Traceback:")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/')
 def home():
-    return "Whisper backend running ✅", 200
+    return "Whisper backend is live ✅", 200
