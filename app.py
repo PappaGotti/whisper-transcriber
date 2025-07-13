@@ -15,22 +15,23 @@ def transcribe():
     print(f"📥 Received file: {file.filename}, Content-Type: {file.content_type}")
 
     try:
-        # Save the file for debug
-        with open("/tmp/test.mp3", "wb") as f:
-            f.write(file.read())
+        # Save file temporarily
+        temp_path = "/tmp/uploaded_audio"
+        file.save(temp_path)
+        print("📦 File saved to /tmp")
 
-        file.stream.seek(0)  # reset the stream pointer
-
-        # Transcribe using OpenAI Whisper API (v1.95+ style)
-        response = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=file.stream
-        )
+        # Open the saved file for OpenAI
+        with open(temp_path, "rb") as f:
+            transcription = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=f
+            )
 
         print("✅ Transcription complete")
-        return jsonify({'text': response.text})
+        return jsonify({'text': transcription.text})
+
     except Exception as e:
-        print("❌ Traceback:")
+        print("❌ Transcription error:")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
